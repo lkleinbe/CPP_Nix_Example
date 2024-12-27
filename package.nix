@@ -8,6 +8,7 @@ enableTests ? true
 }:
 
 stdenv.mkDerivation{
+  # when changing this package name you might also want to change/add a default executable
   name = "package-name";
   src = lib.sourceByRegex ./. [
     "^src.*"
@@ -16,8 +17,8 @@ stdenv.mkDerivation{
   ];
 
   nativeBuildInputs = [cmake ninja]; #compile time
-  buildInputs = [boost ninja]; # run time
-  checkInputs = []; #testpackages
+  buildInputs = [boost]; # run time
+  checkInputs = [boost]; #testpackages
 
   doCheck = enableTests;
   cmakeFlags = lib.optional (!enableTests) "-DTESTING=off";

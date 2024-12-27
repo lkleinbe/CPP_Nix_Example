@@ -8,9 +8,7 @@ include_directories(${Boost_INCLUDE_DIR})
 
 include_directories(.)
 
-add_executable(hello_world
-  src/main.cpp
-)
+add_subdirectory(src)
 
 option(TESTING "Enable tests." ON)
 if (TESTING)
@@ -18,4 +16,3 @@ if (TESTING)
   add_subdirectory(test)
 endif()
 
-install (TARGETS hello_world DESTINATION bin)
