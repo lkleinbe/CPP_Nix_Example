@@ -1,23 +1,25 @@
-{ lib, stdenv, cmake, boost, clang, ninja, enableTests ? true }:
+{ lib, stdenv, cmake, clang, boost, ninja, enableTests ? true }:
 
 stdenv.mkDerivation {
   # when changing this package name you might also want to change/add a default executable
   name = "package-name";
   src = lib.sourceByRegex ./. [ "^src.*" "^test.*" "CMakeLists.txt" ];
 
-  nativeBuildInputs = [ cmake ninja ]; # compile time
+  nativeBuildInputs = [ cmake ninja boost clang ]; # compile time
   buildInputs = [ boost ]; # run time
   checkInputs = [ boost ]; # testpackages
 
   doCheck = enableTests;
   cmakeFlags = lib.optional (!enableTests) "-DTESTING=off";
 
-  cmakePhase = ''
+  configurePhase = ''
     cmake -S . -B build -G Ninja
   '';
 
   buildPhase = ''
+    # runHook preBuild
     ninja -C build
+    # runHook postBuild
   '';
 
   checkPhase = ''
@@ -25,6 +27,6 @@ stdenv.mkDerivation {
   '';
 
   installPhase = ''
-    install -DM755 build/hello_world $out/bin/hello_world
+    install -Dm755 build/src/hello_world $out/bin/hello_world
   '';
 }

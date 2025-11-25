@@ -1,5 +1,4 @@
-#ifndef ADDITION_HPP
-#define ADDITION_HPP
+#pragma once
 
 /**
  * @brief Demonstration Funktion which adds to integers
@@ -9,5 +8,3 @@
  * @return the sum of both numbers
  */
 int add(int a, int b);
-
-#endif
