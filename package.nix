@@ -1,13 +1,13 @@
-{ lib, stdenv, cmake, clang, boost, ninja, enableTests ? true }:
+{ lib, stdenv, pkgs, enableTests ? true }:
 
 stdenv.mkDerivation {
   # when changing this package name you might also want to change/add a default executable
   name = "package-name";
   src = lib.sourceByRegex ./. [ "^src.*" "^test.*" "CMakeLists.txt" ];
 
-  nativeBuildInputs = [ cmake ninja boost clang ]; # compile time
-  buildInputs = [ boost ]; # run time
-  checkInputs = [ boost ]; # testpackages
+  nativeBuildInputs = with pkgs; [ cmake ninja boost clang ]; # compile time
+  buildInputs = with pkgs; [ boost ]; # run time
+  checkInputs = with pkgs; [ boost ]; # testpackages
 
   doCheck = enableTests;
   cmakeFlags = lib.optional (!enableTests) "-DTESTING=off";
