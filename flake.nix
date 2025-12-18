@@ -1,7 +1,7 @@
 {
   description = "CPP Development Project";
 
-  inputs = { nixpkgs.url = "github:NixOS/nixpkgs/nixos-25.05"; };
+  inputs = { nixpkgs.url = "github:NixOS/nixpkgs/nixos-25.11"; };
 
   outputs = inputs@{ flake-parts, ... }:
     flake-parts.lib.mkFlake { inherit inputs; } {
