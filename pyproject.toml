@@ -1,0 +1,29 @@
+[project]
+name = "hello-world-py"
+version = "0.1.0"
+description = "Python hello world example"
+requires-python = ">=3.11"
+dependencies = [
+    "numpy>=2.0.0",
+]
+
+[project.scripts]
+hello-world-py = "src_py.hello_world:main"
+
+[build-system]
+requires = ["uv_build"]
+build-backend = "uv_build"
+
+[tool.uv.build-backend]
+module-root = ""
+module-name = "src_py"
+
+[tool.uv]
+dev-dependencies = [
+    "pytest>=8.0.0",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["test_py"]
+python_files = "test_*.py"
+python_functions = "test_*"

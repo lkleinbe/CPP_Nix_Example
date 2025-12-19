@@ -9,10 +9,10 @@ include_directories(${Boost_INCLUDE_DIR})
 
 include_directories(.)
 
-add_subdirectory(src)
+add_subdirectory(src_cpp)
 
 option(TESTING "Enable tests." ON)
 if(TESTING)
   enable_testing()
-  add_subdirectory(test)
+  add_subdirectory(test_cpp)
 endif()
