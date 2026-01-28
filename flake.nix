@@ -39,27 +39,32 @@
           uvBuildOverlay = final: prev: {
             uv_build = pkgs.python313Packages.uv-build;
           };
-          python = pkgs.python313;
+          python = lib.head
+            (inputs.pyproject-nix.lib.util.filterPythonInterpreters {
+              inherit (workspace) requires-python;
+              inherit (pkgs) pythonInterpreters;
+            });
           pythonSet = (pkgs.callPackage inputs.pyproject-nix.build.packages {
             inherit python;
           }).overrideScope (lib.composeManyExtensions [
-            inputs.pyproject-build-systems.overlays.default
+            inputs.pyproject-build-systems.overlays.wheel
             uvBuildOverlay
             overlay
           ]);
           venv =
             pythonSet.mkVirtualEnv "hello-world-py-env" workspace.deps.default;
-
           # Extra Venv for python development dependencies
           editableOverlay =
             workspace.mkEditablePyprojectOverlay { root = "$REPO_ROOT"; };
           pythonSetDev = pythonSet.overrideScope editableOverlay;
           venvDev = pythonSetDev.mkVirtualEnv "hello-world-py-dev-env"
             workspace.deps.all;
-
         in {
           packages = {
-            default = pkgs.callPackage ./package.nix { pythonEnv = venv; };
+            default = pkgs.callPackage ./package.nix {
+              pythonEnv = venv;
+              pythonEnvDev = venvDev;
+            };
           };
 
           # default app will be importet and run.

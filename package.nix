@@ -1,4 +1,4 @@
-{ lib, stdenv, pkgs, enableTests ? true, pythonEnv }:
+{ lib, stdenv, pkgs, pythonEnv, pythonEnvDev }:
 
 stdenv.mkDerivation {
   # when changing this package name you might also want to change/add a default executable
@@ -7,7 +7,9 @@ stdenv.mkDerivation {
     "^src_cpp.*"
     "^src_py.*"
     "^test_cpp.*"
+    "^test_py.*"
     "CMakeLists.txt"
+    "CMakePresets.json"
   ];
 
   nativeBuildInputs = with pkgs; [
@@ -16,30 +18,30 @@ stdenv.mkDerivation {
     boost
     clang
     makeWrapper
+    catch2_3
   ]; # compile time
   buildInputs = with pkgs; [ boost pythonEnv ];
-  checkInputs = with pkgs; [ boost ]; # testpackages
+  checkInputs = with pkgs; [ catch2_3 pythonEnvDev ]; # testpackages
 
-  doCheck = enableTests;
-  cmakeFlags = lib.optional (!enableTests) "-DTESTING=off";
+  doCheck = true;
+  # cmakeFlags = lib.optional (!enableTests) "-DTESTING=off";
 
   configurePhase = ''
-    cmake -S . -B build -G Ninja
+    cmake --preset release
   '';
 
   buildPhase = ''
-    # runHook preBuild
-    ninja -C build
-    # runHook postBuild
+    cmake --build --preset release
   '';
 
   checkPhase = ''
-    ninja -C build test
+    ctest --preset release
+    pytest
   '';
 
   installPhase = ''
     # Install C++ binary
-    install -Dm755 build/src_cpp/hello_world $out/bin/hello_world
+    install -Dm755 build/release/src_cpp/hello_world $out/bin/hello_world
 
     # Install py binary
     mkdir -p $out/lib/python

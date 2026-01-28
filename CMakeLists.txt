@@ -2,7 +2,6 @@ cmake_minimum_required(VERSION 3.31)
 project(cpp_nix_flake)
 
 set(CMAKE_CXX_STANDARD 17)
-set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 find_package(Boost REQUIRED)
 include_directories(${Boost_INCLUDE_DIR})

@@ -1,7 +1,6 @@
-#define BOOST_TEST_MODULE test_demo
 #include "addition.hpp"
-#include <boost/test/included/unit_test.hpp>
+#include <catch2/catch_test_macros.hpp>
 
-BOOST_AUTO_TEST_CASE(test_demo0) { BOOST_TEST(1 == 1); }
+TEST_CASE("test_demo0", "[demo]") { REQUIRE(1 == 1); }
 
-BOOST_AUTO_TEST_CASE(test_demo1) { BOOST_TEST(add(1, 1) == 2); }
+TEST_CASE("test_demo1", "[demo]") { REQUIRE(add(1, 1) == 2); }
