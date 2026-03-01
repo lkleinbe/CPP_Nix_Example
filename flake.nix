@@ -25,6 +25,8 @@
     };
   };
 
+  inputs.self.submodules = true;
+
   outputs = inputs@{ flake-parts, ... }:
     flake-parts.lib.mkFlake { inherit inputs; } {
       systems =
@@ -32,8 +34,9 @@
       perSystem = { config, self', inputs', pkgs, system, lib, ... }:
         let
           # Python venv
-          workspace =
-            inputs.uv2nix.lib.workspace.loadWorkspace { workspaceRoot = ./.; };
+          workspace = inputs.uv2nix.lib.workspace.loadWorkspace {
+            workspaceRoot = ./hello_world;
+          };
           overlay =
             workspace.mkPyprojectOverlay { sourcePreference = "wheel"; };
           uvBuildOverlay = final: prev: {
@@ -85,7 +88,7 @@
             };
             shellHook = ''
               unset PYTHONPATH
-              export REPO_ROOT=$(pwd)
+              export REPO_ROOT=$(pwd)./hello_world
             '';
           };
         };

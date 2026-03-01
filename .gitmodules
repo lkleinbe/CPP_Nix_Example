@@ -1,0 +1,3 @@
+[submodule "hello_world"]
+	path = hello_world
+	url = git@gitlab.com:lkleinbe/hello_world.git

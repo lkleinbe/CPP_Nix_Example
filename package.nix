@@ -3,14 +3,15 @@
 stdenv.mkDerivation {
   # when changing this package name you might also want to change/add a default executable
   name = "package-name";
-  src = lib.sourceByRegex ./. [
-    "^src_cpp.*"
-    "^src_py.*"
-    "^test_cpp.*"
-    "^test_py.*"
-    "CMakeLists.txt"
-    "CMakePresets.json"
-  ];
+  src = ./.;
+  # src = lib.sourceByRegex ./. [
+  #   "^src_cpp.*"
+  #   "^src_py.*"
+  #   "^test_cpp.*"
+  #   "^test_py.*"
+  #   "CMakeLists.txt"
+  #   "CMakePresets.json"
+  # ];
 
   nativeBuildInputs = with pkgs; [
     cmake
@@ -27,9 +28,11 @@ stdenv.mkDerivation {
   # cmakeFlags = lib.optional (!enableTests) "-DTESTING=off";
 
   configurePhase = ''
+    cd ./hello_world/
     cmake --preset release
   '';
 
+  # Still in ./hello_world/ directory
   buildPhase = ''
     cmake --build --preset release
   '';
