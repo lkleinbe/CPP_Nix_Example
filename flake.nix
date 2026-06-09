@@ -2,7 +2,7 @@
   description = "CPP and Python Development Project";
 
   inputs = {
-    nixpkgs.url = "github:NixOS/nixpkgs/nixos-25.11";
+    nixpkgs.url = "github:NixOS/nixpkgs/nixos-26.05";
 
     flake-parts.url = "github:hercules-ci/flake-parts";
 
@@ -27,42 +27,56 @@
 
   inputs.self.submodules = true;
 
-  outputs = inputs@{ flake-parts, ... }:
+  outputs =
+    inputs@{ flake-parts, ... }:
     flake-parts.lib.mkFlake { inherit inputs; } {
-      systems =
-        [ "x86_64-linux" "aarch64-linux" "aarch64-darwin" "x86_64-darwin" ];
-      perSystem = { config, self', inputs', pkgs, system, lib, ... }:
+      systems = [
+        "x86_64-linux"
+        "aarch64-linux"
+        "aarch64-darwin"
+        "x86_64-darwin"
+      ];
+      perSystem =
+        {
+          config,
+          pkgs,
+          system,
+          lib,
+          ...
+        }:
         let
           # Python venv
           workspace = inputs.uv2nix.lib.workspace.loadWorkspace {
             workspaceRoot = ./hello_world;
           };
-          overlay =
-            workspace.mkPyprojectOverlay { sourcePreference = "wheel"; };
+          overlay = workspace.mkPyprojectOverlay { sourcePreference = "wheel"; };
           uvBuildOverlay = final: prev: {
-            uv_build = pkgs.python313Packages.uv-build;
+            uv_build = python.pkgs.uv-build;
           };
-          python = lib.head
-            (inputs.pyproject-nix.lib.util.filterPythonInterpreters {
+          python = lib.head (
+            inputs.pyproject-nix.lib.util.filterPythonInterpreters {
               inherit (workspace) requires-python;
               inherit (pkgs) pythonInterpreters;
-            });
-          pythonSet = (pkgs.callPackage inputs.pyproject-nix.build.packages {
-            inherit python;
-          }).overrideScope (lib.composeManyExtensions [
-            inputs.pyproject-build-systems.overlays.wheel
-            uvBuildOverlay
-            overlay
-          ]);
-          venv =
-            pythonSet.mkVirtualEnv "hello-world-py-env" workspace.deps.default;
+            }
+          );
+          pythonSet =
+            (pkgs.callPackage inputs.pyproject-nix.build.packages {
+              inherit python;
+            }).overrideScope
+              (
+                lib.composeManyExtensions [
+                  inputs.pyproject-build-systems.overlays.wheel
+                  uvBuildOverlay
+                  overlay
+                ]
+              );
+          venv = pythonSet.mkVirtualEnv "hello-world-py-env" workspace.deps.default;
           # Extra Venv for python development dependencies
-          editableOverlay =
-            workspace.mkEditablePyprojectOverlay { root = "$REPO_ROOT"; };
+          editableOverlay = workspace.mkEditablePyprojectOverlay { root = "$REPO_ROOT"; };
           pythonSetDev = pythonSet.overrideScope editableOverlay;
-          venvDev = pythonSetDev.mkVirtualEnv "hello-world-py-dev-env"
-            workspace.deps.all;
-        in {
+          venvDev = pythonSetDev.mkVirtualEnv "hello-world-py-dev-env" workspace.deps.all;
+        in
+        {
           packages = {
             default = pkgs.callPackage ./package.nix {
               pythonEnv = venv;
@@ -80,18 +94,17 @@
 
           devShells.default = pkgs.mkShell {
             inputsFrom = [ config.packages.default ];
-            packages = [ pkgs.uv venvDev ];
+            packages = [
+              pkgs.uv
+              venvDev
+            ];
             env = config.packages.default.passthru.commonEnv // {
               UV_NO_SYNC = "1";
               UV_PYTHON = pythonSetDev.python.interpreter;
               UV_PYTHON_DOWNLOADS = "never";
             };
-            shellHook = ''
-              unset PYTHONPATH
-              export REPO_ROOT=$(pwd)./hello_world
-            '';
+            shellHook = config.packages.default.passthru.shellHook;
           };
         };
     };
 }
-

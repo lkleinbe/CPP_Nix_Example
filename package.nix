@@ -1,5 +1,15 @@
-{ lib, stdenv, pkgs, pythonEnv, pythonEnvDev }:
+{
+  lib,
+  pkgs,
+  pythonEnv,
+  pythonEnvDev,
+}:
 
+let
+  # Compiler selection: Use either clang or gcc
+  stdenv = pkgs.clangStdenv;
+  # stdenv =  pkgs.gccStdenv;
+in
 stdenv.mkDerivation {
   # when changing this package name you might also want to change/add a default executable
   name = "package-name";
@@ -16,13 +26,16 @@ stdenv.mkDerivation {
   nativeBuildInputs = with pkgs; [
     cmake
     ninja
-    boost
-    clang
     makeWrapper
+  ]; # compile time; compiler provided by stdenv
+  buildInputs = with pkgs; [
+    boost
+    pythonEnv
+  ];
+  checkInputs = with pkgs; [
     catch2_3
-  ]; # compile time
-  buildInputs = with pkgs; [ boost pythonEnv ];
-  checkInputs = with pkgs; [ catch2_3 pythonEnvDev ]; # testpackages
+    pythonEnvDev
+  ]; # testpackages
 
   doCheck = true;
   # cmakeFlags = lib.optional (!enableTests) "-DTESTING=off";
@@ -54,9 +67,20 @@ stdenv.mkDerivation {
       --add-flags "-m src_py.hello_world"
   '';
 
-  # Common environment variables shared between build and devShell
-  passthru.commonEnv = {
-    # Add your shared environment variables here
-    # Example: PROJECT_ROOT = toString ./.;
+  passthru = {
+    # Common environment variables shared between build and devShell
+    commonEnv = {
+      # LD Configuration
+      LD_LIBRARY_PATH = lib.makeLibraryPath [ pkgs.boost ];
+      LDFLAGS = "-L${pkgs.boost}/lib";
+
+      # Add your shared environment variables here
+      # Example: PROJECT_ROOT = toString ./.;
+    };
+
+    shellHook = ''
+      unset PYTHONPATH
+      export REPO_ROOT=$(pwd)/hello_world
+    '';
   };
 }
