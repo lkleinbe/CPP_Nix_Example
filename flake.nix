@@ -49,16 +49,30 @@
           workspace = inputs.uv2nix.lib.workspace.loadWorkspace {
             workspaceRoot = ./hello_world;
           };
-          overlay = workspace.mkPyprojectOverlay { sourcePreference = "wheel"; };
-          uvBuildOverlay = final: prev: {
-            uv_build = python.pkgs.uv-build;
-          };
           python = lib.head (
             inputs.pyproject-nix.lib.util.filterPythonInterpreters {
               inherit (workspace) requires-python;
               inherit (pkgs) pythonInterpreters;
             }
           );
+          overlay = workspace.mkPyprojectOverlay { sourcePreference = "wheel"; };
+          uvBuildOverlay = final: prev: {
+            uv_build = python.pkgs.uv-build;
+          };
+
+          # Inject system packages that can't be built from PyPI
+          # Using hacks.nixpkgsPrebuilt similar to tkinter pattern
+          systemPyPackagesOverlay =
+            final: prev:
+            let
+              hacks = pkgs.callPackage inputs.pyproject-nix.build.hacks { };
+            in
+            {
+              # pygobject = hacks.nixpkgsPrebuilt { from = python.pkgs.pygobject3; };
+              # pycairo = hacks.nixpkgsPrebuilt { from = python.pkgs.pycairo; };
+            };
+
+          # Static venv with fixed dependencies. Works for nix build but will not update while developing
           pythonSet =
             (pkgs.callPackage inputs.pyproject-nix.build.packages {
               inherit python;
@@ -68,12 +82,20 @@
                   inputs.pyproject-build-systems.overlays.wheel
                   uvBuildOverlay
                   overlay
+                  systemPyPackagesOverlay
                 ]
               );
           venv = pythonSet.mkVirtualEnv "hello-world-py-env" workspace.deps.default;
-          # Extra Venv for python development dependencies
+
+          # Extra Venv for python development
           editableOverlay = workspace.mkEditablePyprojectOverlay { root = "$REPO_ROOT"; };
-          pythonSetDev = pythonSet.overrideScope editableOverlay;
+          pythonSetDev = pythonSet.overrideScope (
+            lib.composeManyExtensions [
+              editableOverlay
+              systemPyPackagesOverlay
+            ]
+          );
+
           venvDev = pythonSetDev.mkVirtualEnv "hello-world-py-dev-env" workspace.deps.all;
         in
         {
